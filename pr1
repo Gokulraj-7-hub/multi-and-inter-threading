@@ -1,0 +1,88 @@
+import java.util.Scanner;
+
+class MessageBoard {
+    private String message;
+    private boolean hasMessage = false;
+
+    public synchronized void writeMessage(String msg) {
+        while (hasMessage) {
+            try {
+                wait();
+            } catch (InterruptedException e) {}
+        }
+        message = msg;
+        hasMessage = true;
+        notifyAll();
+    }
+
+    public synchronized String readMessage() {
+        while (!hasMessage) {
+            try {
+                wait();
+            } catch (InterruptedException e) {}
+        }
+        hasMessage = false;
+        notifyAll();
+        return message;
+    }
+}
+
+class Writer extends Thread {
+    private MessageBoard board;
+    private Scanner sc;
+    private int totalMessages;
+
+    public Writer(MessageBoard board, Scanner sc, int totalMessages) {
+        this.board = board;
+        this.sc = sc;
+        this.totalMessages = totalMessages;
+    }
+
+    public void run() {
+        for (int i = 1; i <= totalMessages; i++) {
+            System.out.print("Enter message " + i + ": ");
+            String msg = sc.nextLine();
+            board.writeMessage(msg);
+            System.out.println("Writer wrote: " + msg);
+        }
+    }
+}
+
+class Reader extends Thread {
+    private MessageBoard board;
+    private int totalMessages;
+
+    public Reader(MessageBoard board, int totalMessages) {
+        this.board = board;
+        this.totalMessages = totalMessages;
+    }
+
+    public void run() {
+        for (int i = 1; i <= totalMessages; i++) {
+            String msg = board.readMessage();
+            System.out.println("Reader read: " + msg + "\n");
+        }
+    }
+}
+
+public class test {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("How many messages do you want to send? ");
+        int n = sc.nextInt();
+        sc.nextLine(); // consume newline
+
+        MessageBoard board = new MessageBoard();
+        Writer writer = new Writer(board, sc, n);
+        Reader reader = new Reader(board, n);
+
+        writer.start();
+        reader.start();
+
+        try {
+            writer.join();
+            reader.join();
+        } catch (InterruptedException e) {}
+        sc.close();
+    }
+}
