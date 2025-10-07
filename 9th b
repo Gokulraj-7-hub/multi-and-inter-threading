@@ -1,0 +1,19 @@
+import java.io.File;
+
+public class DeleteFile {
+    public static void main(String[] args) {
+        // Create a File object for the file to be deleted
+        File file = new File("example.txt");
+
+        // Check if file exists before deleting
+        if (file.exists()) {
+            if (file.delete()) {
+                System.out.println("File deleted successfully: " + file.getName());
+            } else {
+                System.out.println("Failed to delete the file.");
+            }
+        } else {
+            System.out.println("File does not exist.");
+        }
+    }
+}
